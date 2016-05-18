@@ -1,7 +1,9 @@
 Rails.application.routes.draw do
-  resources :games, except: [:new, :edit]
-  resources :schedules, except: [:new, :edit]
-  resources :teams, except: [:new, :edit]
+  namespace :api do
+    namespace :v1 do
+      resources :teams, except: [:new, :edit]
+    end
+  end
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
 

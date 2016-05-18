@@ -18,26 +18,28 @@ class Team < ActiveRecord::Base
       games_array.delete_if{ |g| g[0..4] == " Date" }
       games_array.each do |g| 
         date = g.match(/\d{1,2}[A-Z][a-z]{2}\,\s([A-Z][a-z]{2}\s\d{1,2})[@?|v]/)
+        date = date[1] unless date.nil?
         time = g.match(/\S(\d{1,2}:\d{2}\s\S{2})\s/)
-        unless date[1].nil?
-          if date[1][0..2].match(/Jun|Jul|Aug|Sep|Oct|Nov|Dec/)
+        time = time[1] unless time.nil?
+        unless date.nil?
+          if date[0..2].match(/Jun|Jul|Aug|Sep|Oct|Nov|Dec/)
             year = season
-          elsif date[1][0..2].match(/Jan|Feb|Mar|Apr|May/)
+          elsif date[0..2].match(/Jan|Feb|Mar|Apr|May/)
             year = season + 1
           else
             puts "Error parsing year in #{g}"
             return false
           end
+          game_date = Time.zone.parse("#{date} #{year} #{time}").to_datetime
+          opp_check = g.match(/(@|vs)([A-Z]+\.?\s?[A-Z]+)\d/i)
+          opp = opp_check[2] unless opp_check.nil?
+          if g.match(/\@/).nil?
+            home = true
+          else
+            home = false
+          end 
+          Game.where(date: game_date, schedule_id: sched.id, home: home, opponent: opp).first_or_create
         end
-        game_date = Time.zone.parse("#{date[1]} #{year} #{time[1]}").to_datetime unless date.nil?
-        opp_check = g.match(/(@|vs)([A-Z]+\.?\s?[A-Z]+)\d/i)
-        opp = opp_check[2] unless opp_check.nil?
-        if g.match(/\@/).nil?
-          home = true
-        else
-          home = false
-        end 
-        Game.where(date: date, schedule_id: sched.id, home: home, opponent: opp).first_or_create unless date.nil?
       end      
     else
       season = Date.today.year + 1
