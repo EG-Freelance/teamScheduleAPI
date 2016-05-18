@@ -1,0 +1,13 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  sport: MyString
+  full_name: MyString
+  espn_abbv: MyString
+  yahoo_abbv: MyString
+
+two:
+  sport: MyString
+  full_name: MyString
+  espn_abbv: MyString
+  yahoo_abbv: MyString
