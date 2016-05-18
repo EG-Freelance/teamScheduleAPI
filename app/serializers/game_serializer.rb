@@ -1,4 +1,4 @@
 class GameSerializer < ActiveModel::Serializer
   belongs_to :schedule
-  attributes :id, :date, :home, :opponent
+  attributes :date, :home, :opponent
 end
