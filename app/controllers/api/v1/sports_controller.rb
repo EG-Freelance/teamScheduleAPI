@@ -7,6 +7,7 @@ class Api::V1::SportsController < ApplicationController
 
     render json: @teams
   end
+  
   def team_by_sport
     @teams = Team.where(sport: params[:sport].downcase, espn_abbv: params[:espn_abbv].upcase)
     

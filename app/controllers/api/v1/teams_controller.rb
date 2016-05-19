@@ -14,11 +14,6 @@ class Api::V1::TeamsController < ApplicationController
   def show
     render json: @team
   end
-  
-  def sport_index
-    @teams = Team.where(sport: params[:sport].downcase)
-    render json: @teams
-  end
 
   # POST /teams
   # POST /teams.json
