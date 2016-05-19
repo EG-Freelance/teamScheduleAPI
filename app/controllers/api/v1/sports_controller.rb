@@ -3,7 +3,7 @@ class Api::V1::SportsController < ApplicationController
   # GET /sports
   # GET /sports.json
   def sport_index
-    @teams = Team.where(sport: params[:sport].downcase)
+    @teams = Team.includes(:games).where(sport: params[:sport].downcase, :games => { :season => params[:season] } )
 
     render json: @teams
   end
