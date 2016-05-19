@@ -2,6 +2,8 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       resources :teams, except: [:new, :edit]
+      get ':sport' => 'sports#sport_index'
+      get ':sport/:espn_abbv' => 'sports#team_by_sport'
     end
   end
   # The priority is based upon order of creation: first created -> highest priority.
