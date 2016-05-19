@@ -1,6 +1,5 @@
 class Team < ActiveRecord::Base
-  has_many :schedules, dependent: :destroy
-  has_many :games, through: :schedules
+  has_many :games
   
   def get_schedule
     Time.zone = "Eastern Time (US & Canada)"
@@ -10,7 +9,6 @@ class Team < ActiveRecord::Base
     
     if self.sport == "nfl"
       season = Date.today.year
-      sched = Schedule.where(team_id: self.id, season: season.to_s).first_or_create
       agent.get("http://espn.go.com/nfl/team/schedule/_/name/#{team}/")
       content = Nokogiri::HTML(agent.page.content)
       games = content.css('tr')
@@ -38,7 +36,7 @@ class Team < ActiveRecord::Base
           else
             home = false
           end 
-          Game.where(date: game_date, schedule_id: sched.id, home: home, opponent: opp).first_or_create
+          Game.where(date: game_date, season: season, home: home, opponent: opp, team_id: self.id).first_or_create
         end
       end      
     else
@@ -50,7 +48,6 @@ class Team < ActiveRecord::Base
         games = content.css('tr td tr')
         if games.count > 5
           match = 1
-          sched = Schedule.where(team_id: self.id, season: season.to_s).first_or_create
         else
           season = season - 1
         end
@@ -78,7 +75,7 @@ class Team < ActiveRecord::Base
         else
           home = false
         end
-        Game.where(date: date, schedule_id: sched.id, home: home, opponent: opp).first_or_create
+        Game.where(date: date, season: season, home: home, opponent: opp, team_id: self.id).first_or_create
       end
     end
   end
