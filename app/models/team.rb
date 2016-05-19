@@ -3,7 +3,7 @@ class Team < ActiveRecord::Base
   has_many :games, through: :schedules
   
   def get_schedule
-    Time.zone = "EST"
+    Time.zone = "Eastern Time (US & Canada)"
     agent = Mechanize.new
     sport = self.sport
     team = self.espn_abbv
