@@ -9,7 +9,7 @@ class Api::V1::SportsController < ApplicationController
   end
   
   def team_by_sport
-    @teams = Team.where(sport: params[:sport].downcase, espn_abbv: params[:espn_abbv].upcase)
+    @teams = Team.includes(:schedules).where(:sport => params[:sport].downcase, :espn_abbv => params[:espn_abbv].upcase, :schedules => { :season => params[:season] })
     
     render json: @teams
   end
