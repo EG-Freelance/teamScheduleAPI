@@ -52,7 +52,7 @@ class Team < ActiveRecord::Base
           season = season - 1
         end
       end
-      team_season = "#{season-1}-#{season.to_s[2..3]}" if (sport == 'nba' || sport == 'nhl')
+       (sport == 'nba' || sport == 'nhl') ? team_season = "#{season-1}-#{season.to_s[2..3]}" : team_season = season.to_s
       games_array = games.map{ |g| g.text }
       games_array.delete_if{ |g| g[0..4] == " Date" }
       games_array.each do |g|
