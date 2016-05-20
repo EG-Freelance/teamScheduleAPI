@@ -1,5 +1,5 @@
 class GameSerializer < ActiveModel::Serializer
   belongs_to :team
   
-  attributes :season, :date, :home, :opponent
+  attributes :season, :week, :date, :home, :opponent
 end
