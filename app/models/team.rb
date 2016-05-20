@@ -36,9 +36,9 @@ class Team < ActiveRecord::Base
             year = "N/A"
           end
           if year == "N/A"
-            game_date = "BYE WEEK"
+            game_date = nil
             opp = "BYE WEEK"
-            home = "N/A"
+            home = nil
           else
             game_date = Time.zone.parse("#{date} #{year} #{time}").to_datetime
             opp_check = g.match(/(@|vs)([A-Z]+\.?\s?[A-Z]+)\d/i)
