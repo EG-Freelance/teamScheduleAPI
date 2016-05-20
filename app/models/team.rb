@@ -14,9 +14,17 @@ class Team < ActiveRecord::Base
       games = content.css('tr')
       games_array = games.map{ |g| g.text }
       games_array.delete_if{ |g| g[0..4] == " Date" }
+      while games_array[0].match(/Regular/).nil? do
+        games_array.delete_at(0)
+      end
       games_array.each do |g| 
-        date = g.match(/\d{1,2}[A-Z][a-z]{2}\,\s([A-Z][a-z]{2}\s\d{1,2})[@?|v]/)
-        date = date[1] unless date.nil?
+        next if g.match(/\A(\d{1,2})/).nil?
+        week = g.match(/\A(\d{1,2})/)[1]
+        date_reg = g.match(/\d{1,2}[A-Z][a-z]{2}\,\s([A-Z][a-z]{2}\s\d{1,2})[@?|v]|(BYE WEEK)\z/)
+        unless date_reg.nil?
+          date = date_reg[1] unless date_reg[1].nil?
+          date = date_reg[2] unless date_reg[2].nil?
+        end
         time = g.match(/\S(\d{1,2}:\d{2}\s\S{2})\s/)
         time = time[1] unless time.nil?
         unless date.nil?
@@ -25,18 +33,23 @@ class Team < ActiveRecord::Base
           elsif date[0..2].match(/Jan|Feb|Mar|Apr|May/)
             year = season + 1
           else
-            puts "Error parsing year in #{g}"
-            return false
+            year = "N/A"
           end
-          game_date = Time.zone.parse("#{date} #{year} #{time}").to_datetime
-          opp_check = g.match(/(@|vs)([A-Z]+\.?\s?[A-Z]+)\d/i)
-          opp = opp_check[2] unless opp_check.nil?
-          if g.match(/\@/).nil?
-            home = true
+          if year == "N/A"
+            game_date = "BYE WEEK"
+            opp = "BYE WEEK"
+            home = "N/A"
           else
-            home = false
-          end 
-          Game.where(date: game_date, season: season, home: home, opponent: opp, team_id: self.id).first_or_create
+            game_date = Time.zone.parse("#{date} #{year} #{time}").to_datetime
+            opp_check = g.match(/(@|vs)([A-Z]+\.?\s?[A-Z]+)\d/i)
+            opp = opp_check[2] unless opp_check.nil?
+            if g.match(/\@/).nil?
+              home = true
+            else
+              home = false
+            end 
+          end
+          Game.where(week: week, date: game_date, season: season, home: home, opponent: opp, team_id: self.id).first_or_create
         end
       end      
     else
@@ -75,7 +88,7 @@ class Team < ActiveRecord::Base
         else
           home = false
         end
-        Game.where(date: date, season: team_season, home: home, opponent: opp, team_id: self.id).first_or_create
+        Game.where(week: "N/A", date: date, season: team_season, home: home, opponent: opp, team_id: self.id).first_or_create
       end
     end
   end
