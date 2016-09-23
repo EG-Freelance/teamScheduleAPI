@@ -12,7 +12,7 @@ class Team < ActiveRecord::Base
       agent.get("http://www.espn.com/nfl/team/schedule/_/name/#{team.downcase}/")
       content = Nokogiri::HTML(agent.page.content)
       games = content.css('tr')
-      games_array = games.map{ |g| [g.text, g.css('img')] }
+      games_array = games.map{ |g| [g.text, g.css('a').first.nil? ? nil : g.css('a').first.attributes['href'].value] }
       games_array.delete_if{ |g| g[0][0..4] == " Date" }
       while games_array[0][0].match(/Regular/).nil? do
         games_array.delete_at(0)
@@ -42,7 +42,7 @@ class Team < ActiveRecord::Base
           else
             game_date = Time.zone.parse("#{date} #{year} #{time}").to_datetime
             opp_check = g[0].match(/(@|vs)([A-Z]+\.?\s?[A-Z]+)\d/i)
-            opp = g[1].first.attributes['src'].value.match(/teamlogos\/#{sport}\/\d{1,4}\/([a-zA-Z]{1,3})\./)[1] unless opp_check.nil?
+            opp = g[1].first.attributes['src'].value.match(/name\/([A-Za-z]{1,3})\//)[1] unless opp_check.nil?
             if g[0].match(/\@/).nil?
               home = true
             else
