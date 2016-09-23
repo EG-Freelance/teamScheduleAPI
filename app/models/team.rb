@@ -12,20 +12,20 @@ class Team < ActiveRecord::Base
       agent.get("http://espn.go.com/nfl/team/schedule/_/name/#{team}/")
       content = Nokogiri::HTML(agent.page.content)
       games = content.css('tr')
-      games_array = games.map{ |g| g.text }
-      games_array.delete_if{ |g| g[0..4] == " Date" }
-      while games_array[0].match(/Regular/).nil? do
+      games_array = games.map{ |g| [g.text, g.css('img')] }
+      games_array.delete_if{ |g| g[0][0..4] == " Date" }
+      while games_array[0][0].match(/Regular/).nil? do
         games_array.delete_at(0)
       end
       games_array.each do |g| 
-        next if g.match(/\A(\d{1,2})/).nil?
-        week = g.match(/\A(\d{1,2})/)[1]
-        date_reg = g.match(/\d{1,2}[A-Z][a-z]{2}\,\s([A-Z][a-z]{2}\s\d{1,2})[@?|v]|(BYE WEEK)\z/)
+        next if g[0].match(/\A(\d{1,2})/).nil?
+        week = g[0].match(/\A(\d{1,2})/)[1]
+        date_reg = g[0].match(/\d{1,2}[A-Z][a-z]{2}\,\s([A-Z][a-z]{2}\s\d{1,2})[@?|v]|(BYE WEEK)\z/)
         unless date_reg.nil?
           date = date_reg[1] unless date_reg[1].nil?
           date = date_reg[2] unless date_reg[2].nil?
         end
-        time = g.match(/\S(\d{1,2}:\d{2}\s\S{2})\s/)
+        time = g[0].match(/\S(\d{1,2}:\d{2}\s\S{2})\s/)
         time = time[1] unless time.nil?
         unless date.nil?
           if date[0..2].match(/Jun|Jul|Aug|Sep|Oct|Nov|Dec/)
@@ -41,15 +41,15 @@ class Team < ActiveRecord::Base
             home = nil
           else
             game_date = Time.zone.parse("#{date} #{year} #{time}").to_datetime
-            opp_check = g.match(/(@|vs)([A-Z]+\.?\s?[A-Z]+)\d/i)
-            opp = opp_check[2] unless opp_check.nil?
-            if g.match(/\@/).nil?
+            opp_check = g[0].match(/(@|vs)([A-Z]+\.?\s?[A-Z]+)\d/i)
+            opp = g[1].first.attributes['src'].value.match(/teamlogos\/#{sport}\/\d{1,4}\/([a-zA-Z]{1,3})\./)[1] unless opp_check.nil?
+            if g[0].match(/\@/).nil?
               home = true
             else
               home = false
             end 
           end
-          Game.where(week: week, date: game_date, season: season, home: home, opponent: opp, team_id: self.id).first_or_create
+          Game.where(week: week, date: game_date, season: season, home: home, opponent: ( home == false ? "at " : "" ) + opp, team_id: self.id).first_or_create
         end
       end      
     else
