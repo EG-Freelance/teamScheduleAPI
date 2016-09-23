@@ -9,7 +9,7 @@ class Team < ActiveRecord::Base
     
     if self.sport == "nfl"
       season = Date.today.year
-      agent.get("http://espn.go.com/nfl/team/schedule/_/name/#{team}/")
+      agent.get("http://www.espn.com/nfl/team/schedule/_/name/#{team.downcase}/")
       content = Nokogiri::HTML(agent.page.content)
       games = content.css('tr')
       games_array = games.map{ |g| [g.text, g.css('img')] }
