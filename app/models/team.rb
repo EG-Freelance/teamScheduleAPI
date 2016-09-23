@@ -42,7 +42,7 @@ class Team < ActiveRecord::Base
           else
             game_date = Time.zone.parse("#{date} #{year} #{time}").to_datetime
             opp_check = g[0].match(/(@|vs)([A-Z]+\.?\s?[A-Z]+)\d/i)
-            opp = g[1].first.attributes['src'].value.match(/name\/([A-Za-z]{1,3})\//)[1] unless opp_check.nil?
+            opp = g[1].first.attributes['href'].value.match(/name\/([A-Za-z]{1,3})\//)[1] unless opp_check.nil?
             if g[0].match(/\@/).nil?
               home = true
             else
