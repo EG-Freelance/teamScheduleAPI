@@ -56,7 +56,13 @@ class Team < ActiveRecord::Base
         end
         # FIX DUPLICATE WEEK GAMES CAUSED BY PRESEASON
         games = Game.where(team_id: self.id, week: week, season: season)
-        games.order('date asc').first.update(week: "P" + week_u) if games.count > 1
+        if games.count > 1
+          if Game.where(team_id: self.id, week: "P" + week_u, season: season).count > 0
+            games.order('date asc').first.destroy
+          else
+            games.order('date asc').first.update(week: "P" + week_u)
+          end
+        end
       end      
     else
       season = Date.today.year
