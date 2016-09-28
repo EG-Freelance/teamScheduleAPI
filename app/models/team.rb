@@ -19,7 +19,10 @@ class Team < ActiveRecord::Base
       end
       games_array.each do |g| 
         next if g[0].match(/\A(\d{1,2})/).nil?
-        week = g[0].match(/\A(\d{1,2})/)[1]
+        # un-0-padded week number
+        week_u = g[0].match(/\A(\d{1,2})/)[1]
+        # add 0-padding
+        week = "0" + week_u if week_u.length == 1
         date_reg = g[0].match(/\d{1,2}[A-Z][a-z]{2}\,\s([A-Z][a-z]{2}\s\d{1,2})[@?|v]|(BYE WEEK)\z/)
         unless date_reg.nil?
           date = date_reg[1] unless date_reg[1].nil?
@@ -51,6 +54,9 @@ class Team < ActiveRecord::Base
           end
           Game.where(week: week, date: game_date, season: season, home: home, opponent: ( home == false ? "at " : "" ) + opp, team_id: self.id).first_or_create
         end
+        # FIX DUPLICATE WEEK GAMES CAUSED BY PRESEASON
+        games = Game.where(team_id: self.id, week: week, season: season)
+        games.order('date asc').first.update(week: "P" + week_u) if games.count > 1
       end      
     else
       season = Date.today.year
