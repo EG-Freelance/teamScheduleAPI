@@ -22,7 +22,7 @@ class Team < ActiveRecord::Base
         # un-0-padded week number
         week_u = g[0].match(/\A(\d{1,2})/)[1]
         # add 0-padding
-        week = "0" + week_u if week_u.length == 1
+        week_u.length == 1 ? week = "0" + week_u : week = week_u
         date_reg = g[0].match(/\d{1,2}[A-Z][a-z]{2}\,\s([A-Z][a-z]{2}\s\d{1,2})[@?|v]|(BYE WEEK)\z/)
         unless date_reg.nil?
           date = date_reg[1] unless date_reg[1].nil?
