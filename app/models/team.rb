@@ -89,9 +89,9 @@ class Team < ActiveRecord::Base
       games_array.delete_if{ |g| g[0..4] == " Date" }
       games_array.each do |g|
         if (sport == "nhl") || (sport == "nba")
-          if g[0..2].match(/Sep|Oct|Nov|Dec/)
-            year = season
-          elsif g[0..2].match(/Jan|Feb|Mar|Apr|May|Jun|Jul|Aug/)
+          if g[0..2].match(/Aug|Sep|Oct|Nov|Dec/)
+            year = season - 1
+          elsif g[0..2].match(/Jan|Feb|Mar|Apr|May|Jun|Jul/)
             year = season
           else
             puts "Error parsing year in #{g}"
