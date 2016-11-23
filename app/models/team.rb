@@ -65,7 +65,14 @@ class Team < ActiveRecord::Base
         end
       end      
     else
-      season = Date.today.year
+      if (sport == 'nba' || sport == 'nhl')
+        m = Date.today.month
+        if (m == 8 || m == 9 || m == 10 || m == 11 || m == 12)
+          season = Date.today.year + 1
+        else
+          season = Date.today.year
+        end
+      end
       match = 0
       while match == 0 do
         agent.get("http://espn.go.com/#{sport}/teams/printSchedule/_/team/#{team}/season/#{season}")
@@ -77,7 +84,7 @@ class Team < ActiveRecord::Base
           season = season - 1
         end
       end
-       (sport == 'nba' || sport == 'nhl') ? team_season = "#{season-1}-#{season.to_s[2..3]}" : team_season = season.to_s
+      (sport == 'nba' || sport == 'nhl') ? team_season = "#{season-1}-#{season.to_s[2..3]}" : team_season = season.to_s
       games_array = games.map{ |g| g.text }
       games_array.delete_if{ |g| g[0..4] == " Date" }
       games_array.each do |g|
