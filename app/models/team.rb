@@ -45,14 +45,14 @@ class Team < ActiveRecord::Base
           else
             game_date = Time.zone.parse("#{date} #{year} #{time}").to_datetime
             opp_check = g[0].match(/(@|vs)([A-Z]+\.?\s?[A-Z]+)\d/i)
-            opp = g[1].match(/name\/([A-Za-z]{1,3})\//)[1] unless opp_check.nil?
+            opp = Team.find_by(espn_abbv: g[1].match(/name\/([A-Za-z]{1,3})\//)[1].upcase).full_name unless opp_check.nil?
             if g[0].match(/\@/).nil?
               home = true
             else
               home = false
             end 
           end
-          Game.where(week: week, date: game_date, season: season, home: home, opponent: ( home == false ? "at " : "" ) + opp, team_id: self.id).first_or_create
+          Game.where(week: week, date: game_date, season: season, home: home, opponent: opp, team_id: self.id).first_or_create
         end
         # FIX DUPLICATE WEEK GAMES CAUSED BY PRESEASON
         games = Game.where(team_id: self.id, week: week, season: season)
@@ -101,7 +101,14 @@ class Team < ActiveRecord::Base
           year = season
         end
         date = Time.zone.parse((g.match(/([a-z]{3,4}\.?\s\d{1,2})/i)[1] + " #{year} " + g.match(/(\d{1,2}:\d{2}\z)/)[1] + " pm").gsub(".", "")).to_datetime
-        opp = g.match(/[\dat\s]?([a-z]+\.?\s?[a-z]*)\n/i)[1]
+        opp = g.match(/[\dat\s]?([A-Z]+[A-Za-z\s\.]+\.?\s?[a-z]*)\n/)[1]
+        if sport == 'nba'
+          if opp == "LA"
+            opp = "LA Clippers"
+          elsif opp == "Los Angeles"
+            opp = "LA Lakers"
+          end
+        end
         if g.match(/\dat\s/).nil?
           home = true
         else
