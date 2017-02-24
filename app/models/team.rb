@@ -64,7 +64,7 @@ class Team < ActiveRecord::Base
           end
         end
       end      
-    else
+    else # if sport != 'nfl'
       if (sport == 'nba' || sport == 'nhl')
         m = Date.today.month
         if (m == 8 || m == 9 || m == 10 || m == 11 || m == 12)
@@ -72,6 +72,8 @@ class Team < ActiveRecord::Base
         else
           season = Date.today.year
         end
+      else
+        season = Date.today.year
       end
       match = 0
       while match == 0 do
