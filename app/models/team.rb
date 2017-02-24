@@ -6,9 +6,9 @@ class Team < ActiveRecord::Base
     agent = Mechanize.new
     sport = self.sport
     team = self.espn_abbv
+    season = Date.today.year
     
     if self.sport == "nfl"
-      season = Date.today.year
       agent.get("http://www.espn.com/nfl/team/schedule/_/name/#{team.downcase}/")
       content = Nokogiri::HTML(agent.page.content)
       games = content.css('tr')
@@ -69,11 +69,7 @@ class Team < ActiveRecord::Base
         m = Date.today.month
         if (m == 8 || m == 9 || m == 10 || m == 11 || m == 12)
           season = Date.today.year + 1
-        else
-          season = Date.today.year
         end
-      else
-        season = Date.today.year
       end
       match = 0
       while match == 0 do
@@ -99,8 +95,6 @@ class Team < ActiveRecord::Base
             puts "Error parsing year in #{g}"
             return false
           end
-        else
-          year = season
         end
         date = Time.zone.parse((g.match(/([a-z]{3,4}\.?\s\d{1,2})/i)[1] + " #{year} " + g.match(/(\d{1,2}:\d{2}\z)/)[1] + " pm").gsub(".", "")).to_datetime
         opp = g.match(/[\dat\s]?([A-Z]+[A-Za-z\s\.]+\.?\s?[a-z]*)\n/)[1]
