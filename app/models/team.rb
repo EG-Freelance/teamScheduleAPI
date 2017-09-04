@@ -1,6 +1,11 @@
 class Team < ActiveRecord::Base
   has_many :games
   
+  def self.get_schedule(sport)
+    teams = Team.where(sport: sport)
+    teams.each { |t| t.get_schedule }
+  end
+  
   def get_schedule
     Time.zone = "Eastern Time (US & Canada)"
     agent = Mechanize.new
