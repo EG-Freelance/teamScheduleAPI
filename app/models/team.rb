@@ -45,7 +45,7 @@ class Team < ActiveRecord::Base
           else
             game_date = Time.zone.parse("#{date} #{year} #{time}").to_datetime
             opp_check = g[0].match(/(@|vs)([A-Z]+\.?\s?[A-Z]+)\d/i)
-            opp = Team.find_by(espn_abbv: g[1].match(/name\/([A-Za-z]{1,3})\//)[1].upcase).full_name unless opp_check.nil?
+            opp = Team.find_by(sport: "nfl", espn_abbv: g[1].match(/name\/([A-Za-z]{1,3})\//)[1].upcase).full_name unless opp_check.nil?
             if g[0].match(/\@/).nil?
               home = true
             else
