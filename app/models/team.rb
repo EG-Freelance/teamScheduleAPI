@@ -26,14 +26,14 @@ class Team < ActiveRecord::Base
       end
       games_array.each do |g|
         # add P to preseason if beginning preseason games
-        if g[0].match(/\A(\d{1,2})/).nil?
+        if g[0].match(/\A(\d{1,2})/).nil? || g[0].match(/\A#{season}/)
           if g[0].match(/PRESEASON/i)
             preseason = "P"
           end
           next
         end
         # un-0-padded week number
-        week_u = g[0].match(/\A(\d{1,2})/)[1]
+        week_u = preseason + g[0].match(/\A(\d{1,2})/)[1]
         # add 0-padding
         week_u.length == 1 ? week = "0" + week_u : week = week_u
         date_reg = g[0].match(/\d{1,2}[A-Z][a-z]{2}\,\s([A-Z][a-z]{2}\s\d{1,2})[@?|v]|(BYE WEEK)\z/)
@@ -65,8 +65,8 @@ class Team < ActiveRecord::Base
               home = false
             end 
           end
-          g = Game.where(week: preseason + week, season: season, team_id: self.id).first_or_create
-          g.update(date: game_date, home: home, opponent: opp)
+          game = Game.where(week: week, season: season, team_id: self.id).first_or_create
+          game.update(date: game_date, home: home, opponent: opp)
         end
         # FIX DUPLICATE WEEK GAMES CAUSED BY PRESEASON
         ### BETTER FIX IMPLEMENTED ABOVE
