@@ -27,7 +27,7 @@ class Team < ActiveRecord::Base
       games_array.each do |g|
         # add P to preseason if beginning preseason games
         if g[0].match(/\A(\d{1,2})/).nil?
-          if g[0].match(/PRESEASON/)
+          if g[0].match(/PRESEASON/i)
             preseason = "P"
           end
           next
