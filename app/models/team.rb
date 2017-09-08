@@ -14,6 +14,8 @@ class Team < ActiveRecord::Base
     season = Date.today.year
     
     if self.sport == "nfl"
+      # Set preseason variable to change once the preseason section is found
+      preseason = ""
       agent.get("http://www.espn.com/nfl/team/schedule/_/name/#{team.downcase}/")
       content = Nokogiri::HTML(agent.page.content)
       games = content.css('tr')
@@ -22,8 +24,14 @@ class Team < ActiveRecord::Base
       while games_array[0][0].match(/Regular/).nil? do
         games_array.delete_at(0)
       end
-      games_array.each do |g| 
-        next if g[0].match(/\A(\d{1,2})/).nil?
+      games_array.each do |g|
+        # add P to preseason if beginning preseason games
+        if g[0].match(/\A(\d{1,2})/).nil?
+          if g[0]/match(/PREASEASON/)
+            preseason = "P"
+          end
+          next
+        end
         # un-0-padded week number
         week_u = g[0].match(/\A(\d{1,2})/)[1]
         # add 0-padding
@@ -57,18 +65,19 @@ class Team < ActiveRecord::Base
               home = false
             end 
           end
-          g = Game.where(week: week, season: season, team_id: self.id).first_or_create
+          g = Game.where(week: preseason + week, season: season, team_id: self.id).first_or_create
           g.update(date: game_date, home: home, opponent: opp)
         end
         # FIX DUPLICATE WEEK GAMES CAUSED BY PRESEASON
-        games = Game.where(team_id: self.id, week: week, season: season)
-        if games.count > 1
-          if Game.where(team_id: self.id, week: "P" + week_u, season: season).count > 0
-            games.order('date asc').first.destroy
-          else
-            games.order('date asc').first.update(week: "P" + week_u)
-          end
-        end
+        ### BETTER FIX IMPLEMENTED ABOVE
+        # games = Game.where(team_id: self.id, week: week, season: season)
+        # if games.count > 1
+        #   if Game.where(team_id: self.id, week: "P" + week_u, season: season).count > 0
+        #     games.order('date asc').first.destroy
+        #   else
+        #     games.order('date asc').first.update(week: "P" + week_u)
+        #   end
+        # end
       end      
     else # if sport != 'nfl'
       if (sport == 'nba' || sport == 'nhl')
