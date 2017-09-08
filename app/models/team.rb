@@ -33,7 +33,7 @@ class Team < ActiveRecord::Base
           date = date_reg[1] unless date_reg[1].nil?
           date = date_reg[2] unless date_reg[2].nil?
         end
-        time = g[0].match(/\S(\d{1,2}:\d{2}\s\S{2})\s/)
+        time = g[0].match(/\S((?:\d{1,2}:\d{2}\s\S{2}|TBD))\s/)
         time = time[1] unless time.nil?
         unless date.nil?
           if date[0..2].match(/Jun|Jul|Aug|Sep|Oct|Nov|Dec/)
@@ -43,9 +43,9 @@ class Team < ActiveRecord::Base
           else
             year = "N/A"
           end
-          if year == "N/A"
+          if year == "N/A" || g[0].match(/POSTPONED/)
             game_date = nil
-            opp = "BYE WEEK"
+            opp = "BYE WEEK#{g[0].match(/POSTPONED/) ? " (POSTPONED GAME)" : ''}"
             home = nil
           else
             game_date = Time.zone.parse("#{date} #{year} #{time}").to_datetime
@@ -57,7 +57,8 @@ class Team < ActiveRecord::Base
               home = false
             end 
           end
-          Game.where(week: week, date: game_date, season: season, home: home, opponent: opp, team_id: self.id).first_or_create
+          g = Game.where(week: week, season: season, team_id: self.id).first_or_create
+          g.update(date: game_date, home: home, opponent: opp)
         end
         # FIX DUPLICATE WEEK GAMES CAUSED BY PRESEASON
         games = Game.where(team_id: self.id, week: week, season: season)
