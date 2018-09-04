@@ -1,2 +1,0 @@
-sport = << mlb, nhl, nba, nfl >>
-Team.where(sport: sport).each { |t| t.get_schedule }
