@@ -30,7 +30,7 @@ class Team < ActiveRecord::Base
           next
         end
         # week number
-        week = (preseason + g[0].text.match(/\A(\d{1,2})/)[1]).rjust(2 ,"0")
+        week = (preseason + g[0].text).rjust(2 ,"0")
         date = g[1].text
         unless g[1].text == "BYE WEEK"
           time = g[3].text.strip
