@@ -19,65 +19,52 @@ class Team < ActiveRecord::Base
       agent.get("http://www.espn.com/nfl/team/schedule/_/name/#{team.downcase}/")
       content = Nokogiri::HTML(agent.page.content)
       games = content.css('tr')
-      games_array = games.map{ |g| [g.text, g.css('a').first.nil? ? nil : g.css('a').first.attributes['href'].value] }
-      games_array.delete_if{ |g| g[0][0..4] == " Date" }
-      while games_array[0][0].match(/Regular/).nil? do
-        games_array.delete_at(0)
-      end
+
+      games_array = games.map { |g| g.css('td').map { |td| td } }
+      games_array.delete_if { |ga| ga.count > 20 } # regular listings currently have up to 8 el, concats have 140+
       games_array.each do |g|
+        next if g[0].text.downcase == "regular season" || g[0].text.downcase == "wk"
         # add P to preseason if beginning preseason games
-        if g[0].match(/\A(\d{1,2})/).nil? || g[0].match(/\A#{season}/)
-          if g[0].match(/PRESEASON/i)
-            preseason = "P"
-          end
+        if g[0].text.downcase == "preseason"        
+          preseason = "P"
           next
         end
-        # un-0-padded week number
-        week_u = preseason + g[0].match(/\A(\d{1,2})/)[1]
-        # add 0-padding
-        week_u.length == 1 ? week = "0" + week_u : week = week_u
-        date_reg = g[0].match(/\d{1,2}[A-Z][a-z]{2}\,\s([A-Z][a-z]{2}\s\d{1,2})[@?|v]|(BYE WEEK)\z/)
-        unless date_reg.nil?
-          date = date_reg[1] unless date_reg[1].nil?
-          date = date_reg[2] unless date_reg[2].nil?
+        # week number
+        week = (preseason + g[0].text.match(/\A(\d{1,2})/)[1]).rjust(2 ,"0")
+        date = g[1].text
+        time = g[3].text.strip
+        if g[3].text.downcase.strip == "postponed"
+          postponed = true
+        else
+          postponed = false
         end
-        time = g[0].match(/\S((?:\d{1,2}:\d{2}\s\S{2}|TBD))\s/)
-        time = time[1] unless time.nil?
-        unless date.nil?
-          if date[0..2].match(/Jun|Jul|Aug|Sep|Oct|Nov|Dec/)
-            year = season
-          elsif date[0..2].match(/Jan|Feb|Mar|Apr|May/)
-            year = season + 1
-          else
-            year = "N/A"
-          end
-          if year == "N/A" || g[0].match(/POSTPONED/)
-            game_date = nil
-            opp = "BYE WEEK#{g[0].match(/POSTPONED/) ? " (POSTPONED GAME)" : ''}"
-            home = nil
-          else
-            game_date = Time.zone.parse("#{date} #{year} #{time}").to_datetime
-            opp_check = g[0].match(/(@|vs)([A-Z]+\.?\s?[A-Z]+)\d/i)
-            opp = Team.find_by(sport: "nfl", espn_abbv: g[1].match(/name\/([A-Za-z]{1,3})\//)[1].upcase).full_name unless opp_check.nil?
-            if g[0].match(/\@/).nil?
-              home = true
-            else
-              home = false
-            end 
-          end
-          game = Game.where(week: week, season: season, team_id: self.id).first_or_create
-          game.update(date: game_date, home: home, opponent: opp)
+
+        if date.downcase.match(/jun|jul|aug|sep|oct|nov|dec/)
+          year = season
+        elsif date.downcase.match(/jan|feb|mar|apr|may/)
+          year = season + 1
+        else
+          year = "N/A"
         end
-        # FIX DUPLICATE WEEK GAMES CAUSED BY PRESEASON
-        ### BETTER FIX IMPLEMENTED ABOVE
-        # games = Game.where(team_id: self.id, week: week, season: season)
-        # if games.count > 1
-        #   if Game.where(team_id: self.id, week: "P" + week_u, season: season).count > 0
-        #     games.order('date asc').first.destroy
-        #   else
-        #     games.order('date asc').first.update(week: "P" + week_u)
-        #   end
-        # end
+        if year == "N/A" || postponed
+          game_date = nil
+          opp = "BYE WEEK"
+          if postponed
+            opp = opp + " (POSTPONED)"
+          end
+          home = nil
+        else
+          game_date = Time.zone.parse("#{date} #{year} #{time}").to_datetime
+          opp_abbv = g[2].css('a').attr('href').value.match(/\/name\/([A-Za-z]{2,3})\//)
+          opp = Team.find_by(sport: "nfl", espn_abbv: opp_abbv[1].upcase) unless opp_abbv.nil?
+          if g[2].text.match(/\@/).nil?
+            home = true
+          else
+            home = false
+          end
+        end
+        game = Game.where(week: week, season: season, team_id: self.id).first_or_create
+        game.update(date: game_date, home: home, opponent: opp)
       end      
     else # if sport != 'nfl'
       if (sport == 'nba' || sport == 'nhl')
