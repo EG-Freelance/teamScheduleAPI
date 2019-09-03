@@ -3,7 +3,7 @@ class Team < ActiveRecord::Base
   
   def self.get_schedule(sport)
     teams = Team.where(sport: sport)
-    teams.each { |t| t.get_schedule }
+    teams.each { |t| puts "getting #{t.full_name} schedule...."; t.get_schedule }
   end
   
   def get_schedule
@@ -32,11 +32,13 @@ class Team < ActiveRecord::Base
         # week number
         week = (preseason + g[0].text.match(/\A(\d{1,2})/)[1]).rjust(2 ,"0")
         date = g[1].text
-        time = g[3].text.strip
-        if g[3].text.downcase.strip == "postponed"
-          postponed = true
-        else
-          postponed = false
+        unless g[1].text == "BYE WEEK"
+          time = g[3].text.strip
+          if g[3].text.downcase.strip == "postponed"
+            postponed = true
+          else
+            postponed = false
+          end
         end
 
         if date.downcase.match(/jun|jul|aug|sep|oct|nov|dec/)
@@ -56,7 +58,7 @@ class Team < ActiveRecord::Base
         else
           game_date = Time.zone.parse("#{date} #{year} #{time}").to_datetime
           opp_abbv = g[2].css('a').attr('href').value.match(/\/name\/([A-Za-z]{2,3})\//)
-          opp = Team.find_by(sport: "nfl", espn_abbv: opp_abbv[1].upcase) unless opp_abbv.nil?
+          opp = Team.find_by(sport: "nfl", espn_abbv: opp_abbv[1].upcase).full_name unless opp_abbv.nil?
           if g[2].text.match(/\@/).nil?
             home = true
           else
